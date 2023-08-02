@@ -4,6 +4,10 @@ const UpdateActions = require('./actions')
 const UpdateFeedbacks = require('./feedbacks')
 const UpdateVariableDefinitions = require('./variables')
 
+//const Novastar = require('novastar-coex');
+const Novastar = require('../../novastar-coex/index.js')
+const novastar = {};
+
 class ModuleInstance extends InstanceBase {
 	constructor(internal) {
 		super(internal)
@@ -14,9 +18,15 @@ class ModuleInstance extends InstanceBase {
 
 		this.updateStatus(InstanceStatus.Ok)
 
+		this.novastar = new Novastar(config.host);
+
+		//console.log(config);
+
 		this.updateActions() // export actions
 		this.updateFeedbacks() // export feedbacks
 		this.updateVariableDefinitions() // export variable definitions
+
+
 	}
 	// When module gets deleted
 	async destroy() {
@@ -43,6 +53,7 @@ class ModuleInstance extends InstanceBase {
 				label: 'Target Port',
 				width: 4,
 				regex: Regex.PORT,
+				default: 8001
 			},
 		]
 	}

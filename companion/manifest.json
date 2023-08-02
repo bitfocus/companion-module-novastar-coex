@@ -1,16 +1,16 @@
 {
-	"id": "your-module-name",
-	"name": "your-module-name",
-	"shortname": "module-shortname",
-	"description": "A short one line description of your module",
-	"version": "0.0.0",
+	"id": "companion-module-novastar-coex",
+	"name": "companion-module-novastar-coex",
+	"shortname": "novastar-coex",
+	"description": "Companion module for NovaStar COEX/VMP devices (MX40 Pro, KU20, CX80 Pro).",
+	"version": "0.1.0",
 	"license": "MIT",
-	"repository": "git+https://github.com/bitfocus/companion-module-your-module-name.git",
-	"bugs": "https://github.com/bitfocus/companion-module-your-module-name/issues",
+	"repository": "git+https://github.com/bitfocus/companion-module-novastar-coex.git",
+	"bugs": "https://github.com/bitfocus/companion-module-novastar-coex/issues",
 	"maintainers": [
 		{
-			"name": "Your name",
-			"email": "Your email"
+			"name": "Kris Dahl",
+			"email": "kris@weareatomic.com"
 		}
 	],
 	"runtime": {
@@ -20,7 +20,7 @@
 		"entrypoint": "../main.js"
 	},
 	"legacyIds": [],
-	"manufacturer": "Your company",
-	"products": ["Your product"],
+	"manufacturer": "NovaStar",
+	"products": ["MX40 Pro", "CX80 Pro", "KU20"],
 	"keywords": []
 }

@@ -1,5 +1,5 @@
 {
-	"name": "your-module-name",
+	"name": "companion-module-novastar-coex",
 	"version": "0.1.0",
 	"main": "main.js",
 	"scripts": {
@@ -8,10 +8,11 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/bitfocus/companion-module-your-module-name.git"
+		"url": "git+https://github.com/bitfocus/companion-module-novastar-coex.git"
 	},
 	"dependencies": {
-		"@companion-module/base": "~1.4.0"
+		"@companion-module/base": "~1.4.0",
+		"novastar-coex": "^1.0.0"
 	},
 	"devDependencies": {
 		"@companion-module/tools": "^1.2.0"
