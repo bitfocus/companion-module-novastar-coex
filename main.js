@@ -4,9 +4,13 @@ const UpdateActions = require('./actions')
 const UpdateFeedbacks = require('./feedbacks')
 const UpdateVariableDefinitions = require('./variables')
 
-//const Novastar = require('novastar-coex');
-const Novastar = require('../../novastar-coex/index.js')
+const Novastar = require('novastar-coex');
+//const Novastar = require('../../novastar-coex/index.js');
+const _ = require('lodash');
+
 const novastar = {};
+const sources = [];
+const sourcelist = [];
 
 class ModuleInstance extends InstanceBase {
 	constructor(internal) {
@@ -16,17 +20,27 @@ class ModuleInstance extends InstanceBase {
 	async init(config) {
 		this.config = config
 
-		this.updateStatus(InstanceStatus.Ok)
+		
 
-		this.novastar = new Novastar(config.host);
+		this.novastar = new Novastar(config.host)
 
 		//console.log(config);
+		var instance = this;
+		console.log('gather sources here');
+		this.novastar.sources(function(response) {
+			console.log('we got the sources')
+			instance.sources = response
 
-		this.updateActions() // export actions
+			instance.sourcelist = _.map(instance.sources, function (source) {
+				return { id: source.name, label: source.name }
+			})
+
+			instance.updateStatus(InstanceStatus.Ok)
+			instance.updateActions() // export actions
+		});
+		
 		this.updateFeedbacks() // export feedbacks
 		this.updateVariableDefinitions() // export variable definitions
-
-
 	}
 	// When module gets deleted
 	async destroy() {
