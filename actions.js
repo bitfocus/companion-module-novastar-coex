@@ -146,5 +146,21 @@ module.exports = function (self) {
 				})
 			},
 		},
+		colortemp: {
+			name: 'Preset',
+			options: [
+				{
+					id: 'preset',
+					type: 'textinput',
+					label: 'Preset Name or Number',
+				},
+			],
+			callback: async (event) => {
+				console.log('Change Preset', event.options.preset)
+				self.novastar.preset(event.options.preset, function (response, error) {
+					if (error) console.log('Error', error)
+				})
+			},
+		},
 	})
 }
