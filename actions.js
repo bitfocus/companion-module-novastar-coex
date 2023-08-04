@@ -162,5 +162,26 @@ module.exports = function (self) {
 				})
 			},
 		},
+		workingmode: {
+			name: 'Working Mode',
+			options: [
+				{
+					id: 'mode',
+					type: 'dropdown',
+					label: 'Working Mode',
+					default: 3,
+					choices: [
+						{ id: 3, label: 'All-In-One / Advanced' },
+						{ id: 2, label: 'Send Only' },
+					],
+				},
+			],
+			callback: async (event) => {
+				console.log('Change Workingmode', event.options.mode)
+				self.novastar.workingmode(event.options.mode, function (response, error) {
+					if (error) console.log('Error', error)
+				})
+			},
+		},
 	})
 }
