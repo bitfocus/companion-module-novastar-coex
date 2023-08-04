@@ -4,8 +4,8 @@ const UpdateActions = require('./actions')
 const UpdateFeedbacks = require('./feedbacks')
 const UpdateVariableDefinitions = require('./variables')
 
-const Novastar = require('novastar-coex');
-//const Novastar = require('../../novastar-coex/index.js');
+//const Novastar = require('novastar-coex');
+const Novastar = require('../../novastar-coex/index.js');
 const _ = require('lodash');
 
 const novastar = {};
@@ -27,7 +27,7 @@ class ModuleInstance extends InstanceBase {
 		//console.log(config);
 		var instance = this;
 		console.log('gather sources here');
-		this.novastar.sources(function(response) {
+		this.novastar.sources(function(response, error) {
 			console.log('we got the sources')
 			//console.log(response);
 			instance.sources = response
@@ -36,7 +36,12 @@ class ModuleInstance extends InstanceBase {
 				return { id: source.name, label: source.name }
 			})
 
-			instance.updateStatus(InstanceStatus.Ok)
+			if (error) {
+				instance.updateStatus(InstanceStatus.ConnectionFailure)
+			} else {
+				instance.updateStatus(InstanceStatus.Ok)
+			}
+			
 			instance.updateActions() // export actions
 		});
 		
