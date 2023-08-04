@@ -183,5 +183,52 @@ module.exports = function (self) {
 				})
 			},
 		},
+		testpattern: {
+			name: 'Test Pattern',
+			options: [
+				{
+					id: 'mode',
+					type: 'dropdown',
+					label: 'Test Pattern',
+					default: 0,
+					choices: [
+						{ id: 0, label: 'Pure color' },
+						{ id: 16, label: 'Horizontal stripes to the bottom' },
+						{ id: 17, label: 'Horizontal stripes to the right' },
+						{ id: 18, label: 'Slashes' },
+						{ id: 19, label: 'Backslashes' },
+						{ id: 20, label: 'Grid to the bottom right' },
+						{ id: 21, label: 'Grid to the right' },
+						{ id: 32, label: 'Left-to-right red gradient' },
+						{ id: 33, label: 'Left-to-right green gradient' },
+						{ id: 34, label: 'Left-to-right blue gradient' },
+						{ id: 35, label: 'Left-to-right gray gradient' },
+						{ id: 36, label: 'Top-to-bottom red gradient' },
+						{ id: 37, label: 'Top-to-bottom green gradient' },
+						{ id: 38, label: 'Top-to-bottom blue gradient' },
+						{ id: 39, label: 'Top-to-bottom gray gradient' },
+						{ id: 48, label: 'Lightning' },
+					],
+				},
+			],
+			callback: async (event) => {
+				// parameters
+				// {
+				//   red: 0-255,
+				//   green: 0-255,
+				//   blue: 0-255,
+				//   gray: 0-255,
+				//   gridWidth: 1,
+				//   moveSpeed: 0-100,
+				//   gradientStretch : 1-20,
+				//   state : 0-1
+				// }
+
+				console.log('Change Test Pattern', event.options.mode)
+				self.novastar.testpattern(event.options.mode, null, function (response, error) {
+					if (error) console.log('Error', error)
+				})
+			},
+		},
 	})
 }

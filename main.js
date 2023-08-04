@@ -20,15 +20,11 @@ class ModuleInstance extends InstanceBase {
 	async init(config) {
 		this.config = config
 
-		
-
 		this.novastar = new Novastar(config.host)
 
 		//console.log(config);
 		var instance = this;
-		console.log('gather sources here');
 		this.novastar.sources(function(response, error) {
-			console.log('we got the sources')
 			//console.log(response);
 			instance.sources = response
 
