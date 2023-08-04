@@ -4,8 +4,8 @@ const UpdateActions = require('./actions')
 const UpdateFeedbacks = require('./feedbacks')
 const UpdateVariableDefinitions = require('./variables')
 
-//const Novastar = require('novastar-coex');
-const Novastar = require('../../novastar-coex/index.js');
+const Novastar = require('novastar-coex');
+//const Novastar = require('../../novastar-coex/index.js');
 const _ = require('lodash');
 
 const novastar = {};
