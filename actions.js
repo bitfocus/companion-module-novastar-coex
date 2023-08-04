@@ -10,7 +10,7 @@ module.exports = function (self) {
 					id: 'num',
 					type: 'dropdown',
 					label: 'Mode',
-					default: _.get(self,'sourcelist[0].id'),
+					default: _.get(self, 'sourcelist[0].id'),
 					choices: self.sourcelist,
 				},
 			],
@@ -92,6 +92,37 @@ module.exports = function (self) {
 				console.log('Display Mode Freeze', event.options.num)
 
 				self.novastar.freeze(function (response, error) {
+					if (error) console.log('Error', error)
+				})
+			},
+		},
+		gamma: {
+			name: 'Gamma',
+			options: [
+				{
+					id: 'num',
+					type: 'number',
+					label: 'Gamma',
+					default: 2.8,
+					min: 1,
+					max: 4,
+				},
+				{
+					id: 'type',
+					type: 'dropdown',
+					label: 'Type',
+					default: 3,
+					choices: [
+						{ id: 3, label: 'All' },
+						{ id: 0, label: 'Red' },
+						{ id: 1, label: 'Blue' },
+						{ id: 2, label: 'Green' },
+					],
+				},
+			],
+			callback: async (event) => {
+				console.log('Change Gamma', event.options.num, event.options.type);
+				self.novastar.gamma(event.options.num, event.options.type, null, function (response, error) {
 					if (error) console.log('Error', error)
 				})
 			},
