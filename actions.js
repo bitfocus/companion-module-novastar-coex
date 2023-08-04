@@ -192,7 +192,7 @@ module.exports = function (self) {
 					label: 'Test Pattern',
 					default: 0,
 					choices: [
-						{ id: 0, label: 'Pure color' },
+						{ id: 0, label: 'Color' },
 						{ id: 16, label: 'Horizontal stripes to the bottom' },
 						{ id: 17, label: 'Horizontal stripes to the right' },
 						{ id: 18, label: 'Slashes' },
@@ -210,22 +210,94 @@ module.exports = function (self) {
 						{ id: 48, label: 'Lightning' },
 					],
 				},
+				{
+					id: 'params',
+					type: 'static-text',
+					label:
+						'Some of the test patterns use optional parameters, such as color values for "Color" pattern, or speed for gradients and other patterns. Default values are included.',
+				},
+				{
+					id: 'red',
+					type: 'number',
+					label: 'Red',
+					default: 4095,
+					min: 0,
+					max: 4095,
+				},
+				{
+					id: 'green',
+					type: 'number',
+					label: 'Green',
+					default: 4095,
+					min: 0,
+					max: 4095,
+				},
+				{
+					id: 'blue',
+					type: 'number',
+					label: 'Blue',
+					default: 4095,
+					min: 0,
+					max: 4095,
+				},
+				{
+					id: 'gray',
+					type: 'number',
+					label: 'Grayscale / Brightness',
+					default: 255,
+					min: 0,
+					max: 255,
+				},
+				{
+					id: 'gridWidth',
+					type: 'number',
+					label: 'Grid Width / Size',
+					default: 255,
+					min: 0,
+					max: 255,
+				},
+				{
+					id: 'moveSpeed',
+					type: 'number',
+					label: 'Movement Speed',
+					default: 100,
+					min: 0,
+					max: 100,
+				},
+				{
+					id: 'gradientStretch',
+					type: 'number',
+					label: 'Gradient Stretch',
+					default: 1,
+					min: 1,
+					max: 20,
+				},
 			],
 			callback: async (event) => {
-				// parameters
-				// {
-				//   red: 0-255,
-				//   green: 0-255,
-				//   blue: 0-255,
-				//   gray: 0-255,
-				//   gridWidth: 1,
-				//   moveSpeed: 0-100,
-				//   gradientStretch : 1-20,
-				//   state : 0-1
-				// }
+				var defaultparams = {
+					red: 4095,
+					green: 4095,
+					blue: 4095,
+					gray: 255,
+					gridWidth: 255,
+					moveSpeed: 100,
+					gradientStretch: 1,
+					state: 1,
+				}
 
-				console.log('Change Test Pattern', event.options.mode)
-				self.novastar.testpattern(event.options.mode, null, function (response, error) {
+				params = {
+					red: event.options.red,
+					green: event.options.green,
+					blue: event.options.blue,
+					gray: event.options.gray,
+					gridWidth: event.options.gridWidth,
+					moveSpeed: event.options.moveSpeed,
+					gradientStretch: event.options.gradientStretch,
+					state: 1,
+				}
+
+				console.log('Change Test Pattern', event.options.mode, params)
+				self.novastar.testpattern(event.options.mode, params, function (response, error) {
 					if (error) console.log('Error', error)
 				})
 			},
