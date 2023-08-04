@@ -47,7 +47,7 @@ module.exports = function (self) {
 					id: 'num',
 					type: 'dropdown',
 					label: 'Mode',
-					default: 'Normal',
+					default: 0,
 					choices: [
 						{ id: 0, label: 'Normal' },
 						{ id: 1, label: 'Blackout' },
@@ -146,7 +146,7 @@ module.exports = function (self) {
 				})
 			},
 		},
-		colortemp: {
+		preset: {
 			name: 'Preset',
 			options: [
 				{
