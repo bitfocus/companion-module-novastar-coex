@@ -20,26 +20,29 @@ class ModuleInstance extends InstanceBase {
 	async init(config) {
 		this.config = config
 
-		this.novastar = new Novastar(config.host)
+		if (config && config.host) {
+			this.novastar = new Novastar(config.host)
 
-		//console.log(config);
-		var instance = this;
-		this.novastar.sources(function(response, error) {
-			//console.log(response);
-			instance.sources = response
+			//console.log(config);
+			var instance = this
 
-			instance.sourcelist = _.map(instance.sources, function (source) {
-				return { id: source.name, label: source.name }
+			this.novastar.sources(function (response, error) {
+				//console.log(response);
+				instance.sources = response
+
+				instance.sourcelist = _.map(instance.sources, function (source) {
+					return { id: source.name, label: source.name }
+				})
+
+				if (error) {
+					instance.updateStatus(InstanceStatus.ConnectionFailure)
+				} else {
+					instance.updateStatus(InstanceStatus.Ok)
+				}
+
+				instance.updateActions() // export actions
 			})
-
-			if (error) {
-				instance.updateStatus(InstanceStatus.ConnectionFailure)
-			} else {
-				instance.updateStatus(InstanceStatus.Ok)
-			}
-			
-			instance.updateActions() // export actions
-		});
+		}
 		
 		this.updateFeedbacks() // export feedbacks
 		this.updateVariableDefinitions() // export variable definitions
@@ -50,7 +53,10 @@ class ModuleInstance extends InstanceBase {
 	}
 
 	async configUpdated(config) {
-		this.config = config
+
+		console.log('okay this fires when updated');
+		this.config = config;
+		this.init(config);
 	}
 
 	// Return config fields for web config

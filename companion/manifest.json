@@ -20,7 +20,7 @@
 		"entrypoint": "../main.js"
 	},
 	"legacyIds": [],
-	"manufacturer": "NovaStar",
+	"manufacturer": "NovaStar Coex",
 	"products": ["MX40 Pro", "CX80 Pro", "KU20"],
 	"keywords": []
 }
