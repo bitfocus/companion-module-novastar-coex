@@ -1,7 +1,6 @@
-
+const _ = require('lodash');
 
 module.exports = function (self) {
-
 
 	self.setActionDefinitions({
 		source: {
@@ -11,7 +10,7 @@ module.exports = function (self) {
 					id: 'num',
 					type: 'dropdown',
 					label: 'Mode',
-					default: self.sourcelist[0].id,
+					default: _.get(self,'sourcelist[0].id'),
 					choices: self.sourcelist,
 				},
 			],
@@ -60,6 +59,39 @@ module.exports = function (self) {
 				console.log('Display Mode', event.options.num)
 
 				self.novastar.displaymode(event.options.num, function (response, error) {
+					if (error) console.log('Error', error)
+				})
+			},
+		},
+		blackout: {
+			name: 'Blackout',
+			options: [],
+			callback: async (event) => {
+				console.log('Display Mode Blackout', event.options.num)
+
+				self.novastar.blackout(function (response, error) {
+					if (error) console.log('Error', error)
+				})
+			},
+		},
+		normal: {
+			name: 'Normal',
+			options: [],
+			callback: async (event) => {
+				console.log('Display Mode Normal', event.options.num)
+
+				self.novastar.normal(function (response, error) {
+					if (error) console.log('Error', error)
+				})
+			},
+		},
+		freeze: {
+			name: 'Freeze',
+			options: [],
+			callback: async (event) => {
+				console.log('Display Mode Freeze', event.options.num)
+
+				self.novastar.freeze(function (response, error) {
 					if (error) console.log('Error', error)
 				})
 			},

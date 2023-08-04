@@ -29,6 +29,7 @@ class ModuleInstance extends InstanceBase {
 		console.log('gather sources here');
 		this.novastar.sources(function(response) {
 			console.log('we got the sources')
+			//console.log(response);
 			instance.sources = response
 
 			instance.sourcelist = _.map(instance.sources, function (source) {
