@@ -121,8 +121,27 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (event) => {
-				console.log('Change Gamma', event.options.num, event.options.type);
+				console.log('Change Gamma', event.options.num, event.options.type)
 				self.novastar.gamma(event.options.num, event.options.type, null, function (response, error) {
+					if (error) console.log('Error', error)
+				})
+			},
+		},
+		colortemp: {
+			name: 'Color Temperature',
+			options: [
+				{
+					id: 'num',
+					type: 'number',
+					label: 'Color Temp',
+					default: 6500,
+					min: 1700,
+					max: 15000,
+				},
+			],
+			callback: async (event) => {
+				console.log('Change Color Temp', event.options.num)
+				self.novastar.colortemperature(event.options.num, null, function (response, error) {
 					if (error) console.log('Error', error)
 				})
 			},
