@@ -1,4 +1,4 @@
-const _ = require('lodash');
+const _ = require('lodash')
 
 module.exports = function (self) {
 	self.setActionDefinitions({
@@ -33,7 +33,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (event) => {
-				self.log('info', 'Change Brightness: ' + event.options.num);
+				self.log('info', 'Change Brightness: ' + event.options.num)
 
 				self.novastar.brightness(event.options.num, null, function (response, error) {
 					if (error) console.log('Error', error)
@@ -68,7 +68,7 @@ module.exports = function (self) {
 			options: [],
 			callback: async (event) => {
 				self.log('info', 'Display Mode: Blackout')
-				console.log('blackout');
+				console.log('blackout')
 				self.novastar.blackout(function (response, error) {
 					if (error) console.log('Error', error)
 				})

@@ -4,13 +4,13 @@ const UpdateActions = require('./actions')
 const UpdateFeedbacks = require('./feedbacks')
 const UpdateVariableDefinitions = require('./variables')
 
-const Novastar = require('novastar-coex');
+const Novastar = require('novastar-coex')
 //const Novastar = require('../../novastar-coex/index.js'); // if you'd like to use a local module
-const _ = require('lodash');
+const _ = require('lodash')
 
-const novastar = {};
-const sources = [];
-const sourcelist = [];
+const novastar = {}
+const sources = []
+const sourcelist = []
 
 class ModuleInstance extends InstanceBase {
 	constructor(internal) {
@@ -25,7 +25,7 @@ class ModuleInstance extends InstanceBase {
 
 			this.novastar.sources(function (response, error) {
 				instance.sources = response
-				instance.log('info', 'Connected');
+				instance.log('info', 'Connected')
 
 				instance.sourcelist = _.map(instance.sources, function (source) {
 					return { id: source.name, label: source.name }
@@ -40,7 +40,7 @@ class ModuleInstance extends InstanceBase {
 				instance.updateActions() // export actions
 			})
 		}
-		
+
 		this.updateFeedbacks() // export feedbacks
 		this.updateVariableDefinitions() // export variable definitions
 	}
@@ -50,9 +50,9 @@ class ModuleInstance extends InstanceBase {
 	}
 
 	async configUpdated(config) {
-		this.log('info', 'Reloading config');
-		this.config = config;
-		this.init(config);
+		this.log('info', 'Reloading config')
+		this.config = config
+		this.init(config)
 	}
 
 	// Return config fields for web config
@@ -71,7 +71,7 @@ class ModuleInstance extends InstanceBase {
 				label: 'Target Port',
 				width: 4,
 				regex: Regex.PORT,
-				default: 8001
+				default: 8001,
 			},
 		]
 	}
