@@ -5,7 +5,7 @@ const UpdateFeedbacks = require('./feedbacks')
 const UpdateVariableDefinitions = require('./variables')
 
 const Novastar = require('novastar-coex');
-//const Novastar = require('../../novastar-coex/index.js');
+//const Novastar = require('../../novastar-coex/index.js'); // if you'd like to use a local module
 const _ = require('lodash');
 
 const novastar = {};
@@ -19,16 +19,13 @@ class ModuleInstance extends InstanceBase {
 
 	async init(config) {
 		this.config = config
-
 		if (config && config.host) {
 			this.novastar = new Novastar(config.host)
-
-			//console.log(config);
 			var instance = this
 
 			this.novastar.sources(function (response, error) {
-				//console.log(response);
 				instance.sources = response
+				instance.log('info', 'Connected');
 
 				instance.sourcelist = _.map(instance.sources, function (source) {
 					return { id: source.name, label: source.name }
@@ -53,8 +50,7 @@ class ModuleInstance extends InstanceBase {
 	}
 
 	async configUpdated(config) {
-
-		console.log('okay this fires when updated');
+		this.log('info', 'Reloading config');
 		this.config = config;
 		this.init(config);
 	}

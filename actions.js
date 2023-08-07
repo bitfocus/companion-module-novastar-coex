@@ -1,7 +1,6 @@
 const _ = require('lodash');
 
 module.exports = function (self) {
-
 	self.setActionDefinitions({
 		source: {
 			name: 'Change Input Source',
@@ -34,7 +33,8 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (event) => {
-				console.log('Change Brightness', event.options.num)
+				self.log('info', 'Change Brightness: ' + event.options.num);
+
 				self.novastar.brightness(event.options.num, null, function (response, error) {
 					if (error) console.log('Error', error)
 				})
@@ -56,7 +56,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (event) => {
-				console.log('Display Mode', event.options.num)
+				self.log('info', 'Display Mode: ' + event.options.num)
 
 				self.novastar.displaymode(event.options.num, function (response, error) {
 					if (error) console.log('Error', error)
@@ -67,8 +67,8 @@ module.exports = function (self) {
 			name: 'Blackout',
 			options: [],
 			callback: async (event) => {
-				console.log('Display Mode Blackout', event.options.num)
-
+				self.log('info', 'Display Mode: Blackout')
+				console.log('blackout');
 				self.novastar.blackout(function (response, error) {
 					if (error) console.log('Error', error)
 				})
@@ -78,7 +78,7 @@ module.exports = function (self) {
 			name: 'Normal',
 			options: [],
 			callback: async (event) => {
-				console.log('Display Mode Normal', event.options.num)
+				self.log('info', 'Display Mode: Normal')
 
 				self.novastar.normal(function (response, error) {
 					if (error) console.log('Error', error)
@@ -89,7 +89,7 @@ module.exports = function (self) {
 			name: 'Freeze',
 			options: [],
 			callback: async (event) => {
-				console.log('Display Mode Freeze', event.options.num)
+				self.log('info', 'Display Mode: Freeze')
 
 				self.novastar.freeze(function (response, error) {
 					if (error) console.log('Error', error)
@@ -121,6 +121,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (event) => {
+				self.log('info', 'Change Gamma: ' + event.options.type + ' (type), ' + event.options.num + ' (gamma)')
 				console.log('Change Gamma', event.options.num, event.options.type)
 				self.novastar.gamma(event.options.num, event.options.type, null, function (response, error) {
 					if (error) console.log('Error', error)
@@ -140,7 +141,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (event) => {
-				console.log('Change Color Temp', event.options.num)
+				self.log('info', 'Change Color Temp: ' + event.options.num)
 				self.novastar.colortemperature(event.options.num, null, function (response, error) {
 					if (error) console.log('Error', error)
 				})
@@ -156,7 +157,8 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (event) => {
-				console.log('Change Preset', event.options.preset)
+				self.log('info', 'Change Preset: ' + event.options.preset)
+
 				self.novastar.preset(event.options.preset, function (response, error) {
 					if (error) console.log('Error', error)
 				})
@@ -177,7 +179,7 @@ module.exports = function (self) {
 				},
 			],
 			callback: async (event) => {
-				console.log('Change Workingmode', event.options.mode)
+				self.log('info', 'Change Workingmode: ' + event.options.mode)
 				self.novastar.workingmode(event.options.mode, function (response, error) {
 					if (error) console.log('Error', error)
 				})
@@ -296,7 +298,8 @@ module.exports = function (self) {
 					state: 1,
 				}
 
-				console.log('Change Test Pattern', event.options.mode, params)
+				self.log('info', 'Change Test Pattern: ' + event.options.mode + '\n' + JSON.stringify(params))
+
 				self.novastar.testpattern(event.options.mode, params, function (response, error) {
 					if (error) console.log('Error', error)
 				})
