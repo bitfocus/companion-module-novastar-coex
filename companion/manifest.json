@@ -1,9 +1,9 @@
 {
-	"id": "companion-module-novastar-coex",
-	"name": "companion-module-novastar-coex",
+	"id": "novastar-coex",
+	"name": "novastar-coex",
 	"shortname": "novastar-coex",
 	"description": "Companion module for NovaStar COEX/VMP devices (MX40 Pro, KU20, CX80 Pro).",
-	"version": "0.1.0",
+	"version": "0.0.0",
 	"license": "MIT",
 	"repository": "git+https://github.com/bitfocus/companion-module-novastar-coex.git",
 	"bugs": "https://github.com/bitfocus/companion-module-novastar-coex/issues",
@@ -19,7 +19,7 @@
 		"apiVersion": "0.0.0",
 		"entrypoint": "../main.js"
 	},
-	"legacyIds": [],
+	"legacyIds": ["companion-module-novastar-coex"],
 	"manufacturer": "NovaStar Coex",
 	"products": ["MX40 Pro", "CX80 Pro", "KU20"],
 	"keywords": []
