@@ -4,8 +4,8 @@ const UpdateActions = require('./actions')
 const UpdateFeedbacks = require('./feedbacks')
 const UpdateVariableDefinitions = require('./variables')
 
-const Novastar = require('novastar-coex')
-//const Novastar = require('../../novastar-coex/index.js'); // if you'd like to use a local module
+// const Novastar = require('novastar-coex')
+const Novastar = require('C:\\Users\\zhang\\Downloads\\projects\\novastar-coex\\index.js'); // if you'd like to use a local module
 const _ = require('lodash')
 
 const novastar = {}
@@ -19,28 +19,38 @@ class ModuleInstance extends InstanceBase {
 
 	async init(config) {
 		this.config = config
+		this.updateStatus(InstanceStatus.Connecting) // Set initial status to Connecting
+
 		if (config && config.host) {
 			this.novastar = new Novastar(config.host)
-			var instance = this
+			// var instance = this // No longer needed with async/await and arrow functions
 
-			this.novastar.sources(function (response, error) {
-				instance.sources = response
-				instance.log('info', 'Connected')
+			try {
+				const response = await this.novastar.sources() // Await the promise
+				this.sources = response
+				this.log('info', 'Connected')
 
-				instance.sourcelist = _.map(instance.sources, function (source) {
+				this.sourcelist = _.map(this.sources, function (source) {
 					return { id: source.name, label: source.name }
 				})
 
-				if (error) {
-					instance.updateStatus(InstanceStatus.ConnectionFailure)
-				} else {
-					instance.updateStatus(InstanceStatus.Ok)
-				}
-
-				instance.updateActions() // export actions
-			})
+				this.updateStatus(InstanceStatus.Ok)
+				this.updateActions() // export actions after successful connection and source retrieval
+			} catch (error) {
+				this.log('error', `Connection failed: ${error.message || error}`) // Log the error
+				this.updateStatus(InstanceStatus.ConnectionFailure)
+				this.sources = [] // Clear sources on failure
+				this.sourcelist = [] // Clear sourcelist on failure
+				this.updateActions() // Still update actions, maybe with empty source list
+			}
+		} else {
+			this.updateStatus(InstanceStatus.BadConfig) // Set status if host is not configured
+			this.sources = []
+			this.sourcelist = []
+			this.updateActions() // Update actions even with bad config
 		}
 
+		// These can be called regardless of connection status initially
 		this.updateFeedbacks() // export feedbacks
 		this.updateVariableDefinitions() // export variable definitions
 	}
