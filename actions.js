@@ -63,28 +63,6 @@ module.exports = function (self) {
         })
       },
     },
-    blackout_toggle: {
-      name: 'Blackout',
-      options: [],
-      callback: async (event) => {
-        self.log('info', 'Display Mode: Blackout')
-        console.log('blackout')
-        self.novastar.blackout(function (response, error) {
-          if (error) console.log('Error', error)
-        })
-      },
-    },
-    freeze_toggle: {
-      name: 'Freeze',
-      options: [],
-      callback: async (event) => {
-        self.log('info', 'Display Mode: Freeze')
-
-        self.novastar.freeze(function (response, error) {
-          if (error) console.log('Error', error)
-        })
-      },
-    },
     gamma: {
       name: 'Gamma',
       options: [
