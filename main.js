@@ -5,7 +5,7 @@ const UpdateFeedbacks = require('./feedbacks')
 const UpdateVariableDefinitions = require('./variables')
 
 // const Novastar = require('novastar-coex')
-const Novastar = require('C:\\Users\\zhang\\Downloads\\projects\\novastar-coex\\index.js'); // if you'd like to use a local module
+const Novastar = require('C:\\Users\\zhang\\Downloads\\projects\\companion-project\\novastar-coex\\index.js'); // if you'd like to use a local module
 const _ = require('lodash')
 
 const novastar = {}
@@ -15,20 +15,31 @@ const sourcelist = []
 class ModuleInstance extends InstanceBase {
 	constructor(internal) {
 		super(internal)
+		this.pollTimer = null // Timer for polling
+		this.displayParams = [] // Store display parameters
 	}
 
 	async init(config) {
 		this.config = config
 		this.updateStatus(InstanceStatus.Connecting) // Set initial status to Connecting
+		this.displayParams = [] // Reset params on init
+		this.sources = [] // Reset sources
+		this.sourcelist = [] // Reset sourcelist
+
+		// Clear any existing timer
+		if (this.pollTimer) {
+			clearInterval(this.pollTimer)
+			this.pollTimer = null
+		}
 
 		if (config && config.host) {
-			this.novastar = new Novastar(config.host)
-			// var instance = this // No longer needed with async/await and arrow functions
+			this.novastar = new Novastar(config.host, config.port) // Pass port too
 
 			try {
-				const response = await this.novastar.sources() // Await the promise
-				this.sources = response
-				this.log('info', 'Connected')
+				// Fetch sources first
+				const sourcesResponse = await this.novastar.sources() // Await the promise
+				this.sources = sourcesResponse
+				this.log('info', 'Connected and fetched sources')
 
 				this.sourcelist = _.map(this.sources, function (source) {
 					return { id: source.name, label: source.name }
@@ -36,31 +47,88 @@ class ModuleInstance extends InstanceBase {
 
 				this.updateStatus(InstanceStatus.Ok)
 				this.updateActions() // export actions after successful connection and source retrieval
+
+				// Initial fetch of display params and start polling
+				await this.pollDisplayParams()
+				this.pollTimer = setInterval(() => this.pollDisplayParams(), 1000) // Poll every 5 seconds
+
 			} catch (error) {
-				this.log('error', `Connection failed: ${error.message || error}`) // Log the error
+				this.log('error', `Connection or initial data fetch failed: ${error.message || JSON.stringify(error)}`) // Log the error
 				this.updateStatus(InstanceStatus.ConnectionFailure)
 				this.sources = [] // Clear sources on failure
 				this.sourcelist = [] // Clear sourcelist on failure
+				this.displayParams = [] // Clear display params on failure
 				this.updateActions() // Still update actions, maybe with empty source list
+				this.updateVariableDefinitions() // Update variables to reflect empty state
+				this.checkVariables() // Update variable values (likely to empty/default)
 			}
 		} else {
 			this.updateStatus(InstanceStatus.BadConfig) // Set status if host is not configured
 			this.sources = []
 			this.sourcelist = []
+			this.displayParams = []
 			this.updateActions() // Update actions even with bad config
+			this.updateVariableDefinitions() // Update variables to reflect empty state
+			this.checkVariables()
 		}
 
 		// These can be called regardless of connection status initially
+		// updateVariableDefinitions and checkVariables are now called after fetching data or on error/bad config
 		this.updateFeedbacks() // export feedbacks
-		this.updateVariableDefinitions() // export variable definitions
 	}
+
+	// Method to fetch display parameters and update variables
+	async pollDisplayParams() {
+		if (!this.novastar) { // Remove the this.getStatus() check
+			// Don't poll if not connected or configured properly
+			return
+		}
+		try {
+			const params = await this.novastar.getDisplayParams()
+			// Check if params actually changed before updating everything
+			if (!_.isEqual(params, this.displayParams)) {
+				this.log('debug', 'Display parameters updated')
+				this.displayParams = params || [] // Store the fetched parameters, ensure it's an array
+				this.updateVariableDefinitions() // Re-define variables if screen count changes (unlikely but good practice)
+				this.checkVariables() // Update the variable values
+			}
+		} catch (error) {
+			this.log('warn', `Failed to poll display parameters: ${error.message || JSON.stringify(error)}`)
+			// Optionally handle repeated errors, maybe change status
+		}
+	}
+
+	// Method to update variable values based on stored displayParams
+	checkVariables() {
+		const variableValues = {}
+		if (Array.isArray(this.displayParams)) {
+			this.displayParams.forEach((param, index) => {
+				const screenLabel = `Screen ${index + 1}` // Use index for label as ID might be long
+				variableValues[`screen_${index}_id`] = param.screenId
+				variableValues[`screen_${index}_brightness`] = param.brightness
+				variableValues[`screen_${index}_colortemp`] = param.colorTemperature
+				variableValues[`screen_${index}_gamma`] = param.gamma
+			})
+		}
+		this.setVariableValues(variableValues)
+	}
+
 	// When module gets deleted
 	async destroy() {
+		if (this.pollTimer) {
+			clearInterval(this.pollTimer)
+			this.pollTimer = null
+		}
 		this.log('debug', 'destroy')
 	}
 
 	async configUpdated(config) {
 		this.log('info', 'Reloading config')
+		// Clear old timer before re-init
+		if (this.pollTimer) {
+			clearInterval(this.pollTimer)
+			this.pollTimer = null
+		}
 		this.config = config
 		this.init(config)
 	}
