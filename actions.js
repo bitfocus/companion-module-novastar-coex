@@ -119,15 +119,23 @@ module.exports = function (self) {
       options: [
         {
           id: 'preset',
-          type: 'textinput',
-          label: 'Preset Name or Number',
+          type: 'dropdown', // Change type to dropdown
+          label: 'Preset Name',
+          default: _.get(self, 'presetlist[0].id'), // Default to the first preset name
+          choices: self.presetlist, // Use the dynamic list from main.js
         },
       ],
       callback: async (event) => {
         self.log('info', 'Change Preset: ' + event.options.preset)
 
-        self.novastar.preset(event.options.preset, function (response, error) {
-          if (error) console.log('Error', error)
+        // Call applyPreset with the selected preset name (which is the ID in presetlist)
+        self.novastar.applyPreset(event.options.preset, null, function (response, error) { // Assuming applyPreset takes name or ID
+          if (error) {
+            self.log('error', `Failed to apply preset: ${error.message || error}`)
+            console.log('Error applying preset:', error)
+          } else {
+            self.log('info', `Successfully applied preset: ${event.options.preset}`)
+          }
         })
       },
     },

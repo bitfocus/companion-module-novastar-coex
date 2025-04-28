@@ -17,6 +17,8 @@ class ModuleInstance extends InstanceBase {
 		super(internal)
 		this.pollTimer = null // Timer for polling
 		this.displayParams = [] // Store display parameters
+		this.presets = [] // Store presets
+		this.presetlist = [] // Store presets for dropdown
 	}
 
 	async init(config) {
@@ -25,6 +27,8 @@ class ModuleInstance extends InstanceBase {
 		this.displayParams = [] // Reset params on init
 		this.sources = [] // Reset sources
 		this.sourcelist = [] // Reset sourcelist
+		this.presets = [] // Reset presets
+		this.presetlist = [] // Reset presetlist
 
 		// Clear any existing timer
 		if (this.pollTimer) {
@@ -45,8 +49,18 @@ class ModuleInstance extends InstanceBase {
 					return { id: source.name, label: source.name }
 				})
 
+				// Fetch presets
+				const presetsResponse = await this.novastar.getPreset()
+				this.presets = presetsResponse || [] // Ensure it's an array
+				this.log('info', 'Fetched presets')
+
+				this.presetlist = _.map(this.presets, function (preset) {
+					// Use preset name for both id and label for simplicity in action callback
+					return { id: preset.name, label: preset.name }
+				})
+
 				this.updateStatus(InstanceStatus.Ok)
-				this.updateActions() // export actions after successful connection and source retrieval
+				this.updateActions() // export actions after successful connection and data retrieval
 
 				// Initial fetch of display params and start polling
 				await this.pollDisplayParams()
@@ -58,7 +72,9 @@ class ModuleInstance extends InstanceBase {
 				this.sources = [] // Clear sources on failure
 				this.sourcelist = [] // Clear sourcelist on failure
 				this.displayParams = [] // Clear display params on failure
-				this.updateActions() // Still update actions, maybe with empty source list
+				this.presets = [] // Clear presets on failure
+				this.presetlist = [] // Clear presetlist on failure
+				this.updateActions() // Still update actions, maybe with empty lists
 				this.updateVariableDefinitions() // Update variables to reflect empty state
 				this.checkVariables() // Update variable values (likely to empty/default)
 			}
@@ -67,6 +83,8 @@ class ModuleInstance extends InstanceBase {
 			this.sources = []
 			this.sourcelist = []
 			this.displayParams = []
+			this.presets = []
+			this.presetlist = []
 			this.updateActions() // Update actions even with bad config
 			this.updateVariableDefinitions() // Update variables to reflect empty state
 			this.checkVariables()
@@ -105,8 +123,10 @@ class ModuleInstance extends InstanceBase {
 			this.displayParams.forEach((param, index) => {
 				const screenLabel = `Screen ${index + 1}` // Use index for label as ID might be long
 				variableValues[`screen_${index}_id`] = param.screenId
-				variableValues[`screen_${index}_brightness`] = param.brightness
-				variableValues[`screen_${index}_colortemp`] = param.colorTemperature
+				// Convert brightness to percentage string
+				const brightnessPercent = Math.round((param.brightness || 0) * 100)
+				variableValues[`screen_${index}_brightness`] = `${brightnessPercent}%`
+				variableValues[`screen_${index}_colortemp`] = param.colorTemperature + 'K'
 				variableValues[`screen_${index}_gamma`] = param.gamma
 			})
 		}
