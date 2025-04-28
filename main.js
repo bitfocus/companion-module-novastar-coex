@@ -13,178 +13,247 @@ const sources = []
 const sourcelist = []
 
 class ModuleInstance extends InstanceBase {
-	constructor(internal) {
-		super(internal)
-		this.pollTimer = null // Timer for polling
-		this.displayParams = [] // Store display parameters
-		this.presets = [] // Store presets
-		this.presetlist = [] // Store presets for dropdown
-	}
+  constructor(internal) {
+    super(internal)
+    this.pollTimer = null // Timer for polling
+    this.displayParams = [] // Store display parameters
+    this.presets = [] // Store presets
+    this.presetlist = [] // Store presets for dropdown
+    this.currentPresetName = 'Not Activated' // Store current preset name
+  }
 
-	async init(config) {
-		this.config = config
-		this.updateStatus(InstanceStatus.Connecting) // Set initial status to Connecting
-		this.displayParams = [] // Reset params on init
-		this.sources = [] // Reset sources
-		this.sourcelist = [] // Reset sourcelist
-		this.presets = [] // Reset presets
-		this.presetlist = [] // Reset presetlist
+  async init(config) {
+    this.config = config
+    this.updateStatus(InstanceStatus.Connecting) // Set initial status to Connecting
+    this.displayParams = [] // Reset params on init
+    this.sources = [] // Reset sources
+    this.sourcelist = [] // Reset sourcelist
+    this.presets = [] // Reset presets
+    this.presetlist = [] // Reset presetlist
 
-		// Clear any existing timer
-		if (this.pollTimer) {
-			clearInterval(this.pollTimer)
-			this.pollTimer = null
-		}
+    // Clear any existing timer
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer)
+      this.pollTimer = null
+    }
 
-		if (config && config.host) {
-			this.novastar = new Novastar(config.host, config.port) // Pass port too
+    if (config && config.host) {
+      this.novastar = new Novastar(config.host, config.port) // Pass port too
 
-			try {
-				// Fetch sources first
-				const sourcesResponse = await this.novastar.sources() // Await the promise
-				this.sources = sourcesResponse
-				this.log('info', 'Connected and fetched sources')
+      try {
+        // Fetch sources first
+        const sourcesResponse = await this.novastar.sources() // Await the promise
+        this.sources = sourcesResponse
+        this.log('info', 'Connected and fetched sources')
 
-				this.sourcelist = _.map(this.sources, function (source) {
-					return { id: source.name, label: source.name }
-				})
+        this.sourcelist = _.map(this.sources, function (source) {
+          return { id: source.name, label: source.name }
+        })
 
-				// Fetch presets
-				const presetsResponse = await this.novastar.getPreset()
-				this.presets = presetsResponse || [] // Ensure it's an array
-				this.log('info', 'Fetched presets')
+        // Fetch presets
+        const presetsResponse = await this.novastar.getPreset()
+        this.presets = presetsResponse || [] // Ensure it's an array
+        this.log('info', 'Fetched presets')
 
-				this.presetlist = _.map(this.presets, function (preset) {
-					// Use preset name for both id and label for simplicity in action callback
-					return { id: preset.name, label: preset.name }
-				})
+        this.presetlist = _.map(this.presets, function (preset) {
+          // Use preset name for both id and label for simplicity in action callback
+          return { id: preset.name, label: preset.name }
+        })
 
-				this.updateStatus(InstanceStatus.Ok)
-				this.updateActions() // export actions after successful connection and data retrieval
+        // Find the active preset
+        const activePreset = this.presets.find(p => p.state === true);
+        this.currentPresetName = activePreset ? activePreset.name : 'Not Activated';
 
-				// Initial fetch of display params and start polling
-				await this.pollDisplayParams()
-				this.pollTimer = setInterval(() => this.pollDisplayParams(), 1000) // Poll every 5 seconds
+        this.updateStatus(InstanceStatus.Ok)
+        this.updateActions() // export actions after successful connection and data retrieval
 
-			} catch (error) {
-				this.log('error', `Connection or initial data fetch failed: ${error.message || JSON.stringify(error)}`) // Log the error
-				this.updateStatus(InstanceStatus.ConnectionFailure)
-				this.sources = [] // Clear sources on failure
-				this.sourcelist = [] // Clear sourcelist on failure
-				this.displayParams = [] // Clear display params on failure
-				this.presets = [] // Clear presets on failure
-				this.presetlist = [] // Clear presetlist on failure
-				this.updateActions() // Still update actions, maybe with empty lists
-				this.updateVariableDefinitions() // Update variables to reflect empty state
-				this.checkVariables() // Update variable values (likely to empty/default)
-			}
-		} else {
-			this.updateStatus(InstanceStatus.BadConfig) // Set status if host is not configured
-			this.sources = []
-			this.sourcelist = []
-			this.displayParams = []
-			this.presets = []
-			this.presetlist = []
-			this.updateActions() // Update actions even with bad config
-			this.updateVariableDefinitions() // Update variables to reflect empty state
-			this.checkVariables()
-		}
+        // Initial fetch using the new pollData function
+        await this.pollData(
+          this.novastar.getDisplayParams.bind(this.novastar),
+          'displayParams',
+          this.processDisplayParamsData,
+          'Display parameters'
+        );
+        await this.pollData(
+          this.novastar.getPreset.bind(this.novastar), // Use the correct function name
+          'presets',
+          this.processPresetsData,
+          'Presets'
+        );
 
-		// These can be called regardless of connection status initially
-		// updateVariableDefinitions and checkVariables are now called after fetching data or on error/bad config
-		this.updateFeedbacks() // export feedbacks
-	}
+        // Start the combined polling timer
+        this.pollTimer = setInterval(async () => { // Make interval callback async
+          await this.pollData(
+            this.novastar.getDisplayParams.bind(this.novastar),
+            'displayParams',
+            this.processDisplayParamsData,
+            'Display parameters'
+          );
+          await this.pollData(
+            this.novastar.getPreset.bind(this.novastar), // Use the correct function name
+            'presets',
+            this.processPresetsData,
+            'Presets'
+          );
+          // Optional: Call checkVariables once here if removed from process callbacks
+          // this.checkVariables();
+        }, 500); // Poll every 5 seconds (adjust as needed)
 
-	// Method to fetch display parameters and update variables
-	async pollDisplayParams() {
-		if (!this.novastar) { // Remove the this.getStatus() check
-			// Don't poll if not connected or configured properly
-			return
-		}
-		try {
-			const params = await this.novastar.getDisplayParams()
-			// Check if params actually changed before updating everything
-			if (!_.isEqual(params, this.displayParams)) {
-				this.log('debug', 'Display parameters updated')
-				this.displayParams = params || [] // Store the fetched parameters, ensure it's an array
-				this.updateVariableDefinitions() // Re-define variables if screen count changes (unlikely but good practice)
-				this.checkVariables() // Update the variable values
-			}
-		} catch (error) {
-			this.log('warn', `Failed to poll display parameters: ${error.message || JSON.stringify(error)}`)
-			// Optionally handle repeated errors, maybe change status
-		}
-	}
+      } catch (error) {
+        this.log('error', `Connection or initial data fetch failed: ${error.message || JSON.stringify(error)}`) // Log the error
+        this.updateStatus(InstanceStatus.ConnectionFailure)
+        this.sources = [] // Clear sources on failure
+        this.sourcelist = [] // Clear sourcelist on failure
+        this.displayParams = [] // Clear display params on failure
+        this.presets = [] // Clear presets on failure
+        this.presetlist = [] // Clear presetlist on failure
+        this.updateActions() // Still update actions, maybe with empty lists
+        this.updateVariableDefinitions() // Update variables to reflect empty state
+        this.checkVariables() // Update variable values (likely to empty/default)
+      }
+    } else {
+      this.updateStatus(InstanceStatus.BadConfig) // Set status if host is not configured
+      this.sources = []
+      this.sourcelist = []
+      this.displayParams = []
+      this.presets = []
+      this.presetlist = []
+      this.updateActions() // Update actions even with bad config
+      this.updateVariableDefinitions() // Update variables to reflect empty state
+      this.checkVariables()
+    }
 
-	// Method to update variable values based on stored displayParams
-	checkVariables() {
-		const variableValues = {}
-		if (Array.isArray(this.displayParams)) {
-			this.displayParams.forEach((param, index) => {
-				const screenLabel = `Screen ${index + 1}` // Use index for label as ID might be long
-				variableValues[`screen_${index}_id`] = param.screenId
-				// Convert brightness to percentage string
-				const brightnessPercent = Math.round((param.brightness || 0) * 100)
-				variableValues[`screen_${index}_brightness`] = `${brightnessPercent}%`
-				variableValues[`screen_${index}_colortemp`] = param.colorTemperature + 'K'
-				variableValues[`screen_${index}_gamma`] = param.gamma
-			})
-		}
-		this.setVariableValues(variableValues)
-	}
+    // These can be called regardless of connection status initially
+    // updateVariableDefinitions and checkVariables are now called after fetching data or on error/bad config
+    this.updateFeedbacks() // export feedbacks
+  }
 
-	// When module gets deleted
-	async destroy() {
-		if (this.pollTimer) {
-			clearInterval(this.pollTimer)
-			this.pollTimer = null
-		}
-		this.log('debug', 'destroy')
-	}
+  // Generic method to poll data from the device
+  async pollData(apiMethod, stateProperty, processDataCallback, errorMsgPrefix) {
+    if (!this.novastar) {
+      return;
+    }
+    try {
+      const newData = await apiMethod();
+      const currentData = this[stateProperty];
 
-	async configUpdated(config) {
-		this.log('info', 'Reloading config')
-		// Clear old timer before re-init
-		if (this.pollTimer) {
-			clearInterval(this.pollTimer)
-			this.pollTimer = null
-		}
-		this.config = config
-		this.init(config)
-	}
+      // Ensure newData is always an array for comparison for list-based properties
+      const safeNewData = newData || ((stateProperty === 'presets' || stateProperty === 'displayParams') ? [] : newData);
 
-	// Return config fields for web config
-	getConfigFields() {
-		return [
-			{
-				type: 'textinput',
-				id: 'host',
-				label: 'Target IP',
-				width: 8,
-				regex: Regex.IP,
-			},
-			{
-				type: 'textinput',
-				id: 'port',
-				label: 'Target Port',
-				width: 4,
-				regex: Regex.PORT,
-				default: 8001,
-			},
-		]
-	}
+      if (!_.isEqual(safeNewData, currentData)) {
+        this.log('debug', `${errorMsgPrefix} updated`);
+        this[stateProperty] = safeNewData; // Update the main state property
 
-	updateActions() {
-		UpdateActions(this)
-	}
+        // Call the specific processing logic
+        if (processDataCallback) {
+          processDataCallback.call(this, safeNewData); // Use .call to maintain 'this' context
+        }
+      }
+    } catch (error) {
+      this.log('warn', `Failed to poll ${errorMsgPrefix.toLowerCase()}: ${error.message || JSON.stringify(error)}`);
+    }
+  }
 
-	updateFeedbacks() {
-		UpdateFeedbacks(this)
-	}
+  // Specific callback for processing display parameters data
+  processDisplayParamsData(newParams) {
+    // this.displayParams is already updated by pollData
+    this.updateVariableDefinitions(); // Re-define variables if screen count changes
+    this.checkVariables(); // Update the variable values
+  }
 
-	updateVariableDefinitions() {
-		UpdateVariableDefinitions(this)
-	}
+  // Specific callback for processing presets data
+  processPresetsData(newPresets) {
+    // this.presets is already updated by pollData
+    // Update preset list for dropdowns
+    this.presetlist = _.map(newPresets, function (preset) {
+      return { id: preset.name, label: preset.name };
+    });
+    this.updateActions(); // Update actions if preset list changed
+
+    // Find the active preset
+    const activePreset = newPresets.find(p => p.state === true);
+    const newPresetName = activePreset ? activePreset.name : 'Not Activated';
+
+    // Update the variable only if the name changed
+    if (newPresetName !== this.currentPresetName) {
+      this.currentPresetName = newPresetName;
+      // Update variables including the preset name
+      this.checkVariables();
+    }
+  }
+
+  // Method to update variable values based on stored displayParams
+  checkVariables() {
+    const variableValues = {}
+    if (Array.isArray(this.displayParams)) {
+      this.displayParams.forEach((param, index) => {
+        const screenLabel = `Screen ${index + 1}` // Use index for label as ID might be long
+        variableValues[`screen_${index}_id`] = param.screenId
+        // Convert brightness to percentage string
+        const brightnessPercent = Math.round((param.brightness || 0) * 100)
+        variableValues[`screen_${index}_brightness`] = `${brightnessPercent}%`
+        variableValues[`screen_${index}_colortemp`] = param.colorTemperature + 'K'
+        variableValues[`screen_${index}_gamma`] = param.gamma
+      })
+    }
+    // Set the current preset name variable
+    variableValues['current_preset_name'] = this.currentPresetName || 'Not Activated';
+
+    this.setVariableValues(variableValues)
+  }
+
+  // When module gets deleted
+  async destroy() {
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer)
+      this.pollTimer = null
+    }
+    this.log('debug', 'destroy')
+  }
+
+  async configUpdated(config) {
+    this.log('info', 'Reloading config')
+    // Clear old timer before re-init
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer)
+      this.pollTimer = null
+    }
+    this.config = config
+    this.init(config)
+  }
+
+  // Return config fields for web config
+  getConfigFields() {
+    return [
+      {
+        type: 'textinput',
+        id: 'host',
+        label: 'Target IP',
+        width: 8,
+        regex: Regex.IP,
+      },
+      {
+        type: 'textinput',
+        id: 'port',
+        label: 'Target Port',
+        width: 4,
+        regex: Regex.PORT,
+        default: 8001,
+      },
+    ]
+  }
+
+  updateActions() {
+    UpdateActions(this)
+  }
+
+  updateFeedbacks() {
+    UpdateFeedbacks(this)
+  }
+
+  updateVariableDefinitions() {
+    UpdateVariableDefinitions(this)
+  }
 }
 
 runEntrypoint(ModuleInstance, UpgradeScripts)

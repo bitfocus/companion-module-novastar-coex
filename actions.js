@@ -135,6 +135,10 @@ module.exports = function (self) {
             console.log('Error applying preset:', error)
           } else {
             self.log('info', `Successfully applied preset: ${event.options.preset}`)
+            // Update the stored current preset name - This provides immediate feedback
+            // The pollPresets function will confirm the actual state later
+            // self.currentPresetName = event.options.preset; // Keep or remove based on desired behavior
+            // self.checkVariables(); // Keep or remove based on desired behavior
           }
         })
       },
