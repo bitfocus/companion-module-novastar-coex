@@ -159,6 +159,7 @@ class ModuleInstance extends InstanceBase {
     // this.displayParams is already updated by pollData
     this.updateVariableDefinitions(); // Re-define variables if screen count changes
     this.checkVariables(); // Update the variable values
+    this.checkFeedbacks(); // Add this line to trigger feedback updates
   }
 
   // Specific callback for processing presets data
@@ -179,6 +180,10 @@ class ModuleInstance extends InstanceBase {
       this.currentPresetName = newPresetName;
       // Update variables including the preset name
       this.checkVariables();
+      this.checkFeedbacks(); // Add this line
+    } else {
+      // Optional: If other feedbacks depend on the full preset list,
+      // you might want to call checkFeedbacks() here too, even if the
     }
   }
 
