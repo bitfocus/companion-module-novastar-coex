@@ -4,8 +4,7 @@ const UpdateActions = require('./actions')
 const UpdateFeedbacks = require('./feedbacks')
 const UpdateVariableDefinitions = require('./variables')
 
-// const Novastar = require('novastar-coex')
-const Novastar = require('C:\\Users\\zhang\\Downloads\\projects\\companion-project\\novastar-coex\\index.js'); // if you'd like to use a local module
+const Novastar = require('@novastar-dev/coex')
 const _ = require('lodash')
 
 const novastar = {}
