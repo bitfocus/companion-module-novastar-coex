@@ -14,10 +14,14 @@ module.exports = function (self) {
         },
       ],
       callback: async (event) => {
-        console.log('Change Input Source', event.options.num)
-        self.novastar.input(event.options.num, function (response, error) {
-          if (error) console.log('Error', error)
-        })
+        self.log('debug', 'Change Input Source: ' + event.options.num) // Use self.log
+        try {
+          // Use await and try/catch, remove callback function
+          const response = await self.novastar.input(event.options.num)
+          self.log('debug', 'Input change response: ' + JSON.stringify(response)) // Log success if needed
+        } catch (error) {
+          self.log('error', `Error changing input source: ${error.message || error}`) // Use self.log for errors
+        }
       },
     },
     brightness: {
@@ -33,11 +37,14 @@ module.exports = function (self) {
         },
       ],
       callback: async (event) => {
-        self.log('info', 'Change Brightness: ' + event.options.num)
-
-        self.novastar.brightness(event.options.num, null, function (response, error) {
-          if (error) console.log('Error', error)
-        })
+        self.log('info', 'Change Brightness: ' + event.options.num) // Use self.log
+        try {
+          // Use await and try/catch, remove callback function (assuming brightness takes value and optional screenId)
+          const response = await self.novastar.brightness(event.options.num, null)
+          self.log('debug', 'Brightness change response: ' + JSON.stringify(response)) // Log success if needed
+        } catch (error) {
+          self.log('error', `Error changing brightness: ${error.message || error}`) // Use self.log for errors
+        }
       },
     },
     display_mode: {
@@ -56,11 +63,14 @@ module.exports = function (self) {
         },
       ],
       callback: async (event) => {
-        self.log('info', 'Display Mode: ' + event.options.num)
-
-        self.novastar.displaymode(event.options.num, function (response, error) {
-          if (error) console.log('Error', error)
-        })
+        self.log('info', 'Display Mode: ' + event.options.num) // Use self.log
+        try {
+          // Use await and try/catch, remove callback function
+          const response = await self.novastar.displaymode(event.options.num)
+          self.log('debug', 'Display mode change response: ' + JSON.stringify(response)) // Log success if needed
+        } catch (error) {
+          self.log('error', `Error changing display mode: ${error.message || error}`) // Use self.log for errors
+        }
       },
     },
     gamma: {
@@ -82,17 +92,20 @@ module.exports = function (self) {
           choices: [
             { id: 3, label: 'All' },
             { id: 0, label: 'Red' },
-            { id: 1, label: 'Blue' },
+            { id: 1, label: 'Blue' }, // Note: Original comment said Blue=1, Green=2. Verify this mapping.
             { id: 2, label: 'Green' },
           ],
         },
       ],
       callback: async (event) => {
-        self.log('info', 'Change Gamma: ' + event.options.type + ' (type), ' + event.options.num + ' (gamma)')
-        console.log('Change Gamma', event.options.num, event.options.type)
-        self.novastar.gamma(event.options.num, event.options.type, null, function (response, error) {
-          if (error) console.log('Error', error)
-        })
+        self.log('info', `Change Gamma: Type=${event.options.type}, Value=${event.options.num}`) // Use self.log
+        try {
+          // Use await and try/catch, remove callback function (assuming gamma takes value, type, optional screenId)
+          const response = await self.novastar.gamma(event.options.num, event.options.type, null)
+          self.log('debug', 'Gamma change response: ' + JSON.stringify(response)) // Log success if needed
+        } catch (error) {
+          self.log('error', `Error changing gamma: ${error.message || error}`) // Use self.log for errors
+        }
       },
     },
     colortemp: {
@@ -108,10 +121,14 @@ module.exports = function (self) {
         },
       ],
       callback: async (event) => {
-        self.log('info', 'Change Color Temp: ' + event.options.num)
-        self.novastar.colortemperature(event.options.num, null, function (response, error) {
-          if (error) console.log('Error', error)
-        })
+        self.log('info', 'Change Color Temp: ' + event.options.num) // Use self.log
+        try {
+          // Use await and try/catch, remove callback function (assuming colortemperature takes value, optional screenId)
+          const response = await self.novastar.colortemperature(event.options.num, null)
+          self.log('debug', 'Color temp change response: ' + JSON.stringify(response)) // Log success if needed
+        } catch (error) {
+          self.log('error', `Error changing color temperature: ${error.message || error}`) // Use self.log for errors
+        }
       },
     },
     preset: {
@@ -126,21 +143,17 @@ module.exports = function (self) {
         },
       ],
       callback: async (event) => {
-        self.log('info', 'Change Preset: ' + event.options.preset)
-
-        // Call applyPreset with the selected preset name (which is the ID in presetlist)
-        self.novastar.applyPreset(event.options.preset, null, function (response, error) { // Assuming applyPreset takes name or ID
-          if (error) {
-            self.log('error', `Failed to apply preset: ${error.message || error}`)
-            console.log('Error applying preset:', error)
-          } else {
-            self.log('info', `Successfully applied preset: ${event.options.preset}`)
-            // Update the stored current preset name - This provides immediate feedback
-            // The pollPresets function will confirm the actual state later
-            // self.currentPresetName = event.options.preset; // Keep or remove based on desired behavior
-            // self.checkVariables(); // Keep or remove based on desired behavior
-          }
-        })
+        self.log('info', 'Change Preset: ' + event.options.preset) // Use self.log
+        try {
+          // Use await and try/catch, remove callback function (assuming applyPreset takes name or ID)
+          const response = await self.novastar.applyPreset(event.options.preset, null)
+          self.log('info', `Successfully applied preset: ${event.options.preset}`)
+          self.log('debug', 'Apply preset response: ' + JSON.stringify(response))
+          // Optional: Force a poll after applying preset to update state immediately
+          // await self.pollData(...) for presets
+        } catch (error) {
+          self.log('error', `Failed to apply preset: ${error.message || error}`) // Use self.log for errors
+        }
       },
     },
     testpattern: {
@@ -234,18 +247,8 @@ module.exports = function (self) {
         },
       ],
       callback: async (event) => {
-        var defaultparams = {
-          red: 4095,
-          green: 4095,
-          blue: 4095,
-          gray: 255,
-          gridWidth: 255,
-          moveSpeed: 100,
-          gradientStretch: 1,
-          state: 1,
-        }
-
-        params = {
+        // Construct params object from options
+        const params = {
           red: event.options.red,
           green: event.options.green,
           blue: event.options.blue,
@@ -253,14 +256,18 @@ module.exports = function (self) {
           gridWidth: event.options.gridWidth,
           moveSpeed: event.options.moveSpeed,
           gradientStretch: event.options.gradientStretch,
-          state: 1,
+          state: 1, // Assuming state 1 means 'on'
         }
 
-        self.log('info', 'Change Test Pattern: ' + event.options.mode + '\n' + JSON.stringify(params))
+        self.log('info', `Change Test Pattern: Mode=${event.options.mode}, Params=${JSON.stringify(params)}`) // Use self.log
 
-        self.novastar.testpattern(event.options.mode, params, function (response, error) {
-          if (error) console.log('Error', error)
-        })
+        try {
+          // Use await and try/catch, remove callback function
+          const response = await self.novastar.testpattern(event.options.mode, params)
+          self.log('debug', 'Test pattern change response: ' + JSON.stringify(response)) // Log success if needed
+        } catch (error) {
+          self.log('error', `Error changing test pattern: ${error.message || error}`) // Use self.log for errors
+        }
       },
     },
     // New action to set 3D LUT status
@@ -292,11 +299,12 @@ module.exports = function (self) {
         self.log('debug', `Set 3D LUT Status to ${statusLabel} for screens: ${screenIdsOption || 'all'}`);
 
         try {
-          // Call the library function directly with the selected state
-          await self.novastar.enable3DLut(enableValue, screenIdsOption);
+          // Call the library function directly with the selected state using await
+          const response = await self.novastar.enable3DLut(enableValue, screenIdsOption);
           self.log('info', `Successfully set 3D LUT Status to ${statusLabel} for screens: ${screenIdsOption || 'all'}`);
+          self.log('debug', 'Set 3D LUT status response: ' + JSON.stringify(response));
         } catch (error) {
-          self.log('error', `Failed to set 3D LUT status: ${error.message || error}`);
+          self.log('error', `Failed to set 3D LUT status: ${error.message || error}`); // Use self.log for errors
         }
       },
     },
