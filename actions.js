@@ -47,6 +47,29 @@ module.exports = function (self) {
         }
       },
     },
+    gamma: {
+      name: 'Gamma',
+      options: [
+        {
+          id: 'num',
+          type: 'number',
+          label: 'Gamma',
+          default: 2.8,
+          min: 1,
+          max: 4,
+        }
+      ],
+      callback: async (event) => {
+        self.log('info', `Change Gamma: Value=${event.options.num}`) // Use self.log
+        try {
+          // Use await and try/catch, remove callback function (assuming gamma takes value, type, optional screenId)
+          const response = await self.novastar.gamma(event.options.num, null)
+          self.log('debug', 'Gamma change response: ' + JSON.stringify(response)) // Log success if needed
+        } catch (error) {
+          self.log('error', `Error changing gamma: ${error.message || error}`) // Use self.log for errors
+        }
+      },
+    },
     display_mode: {
       name: 'Display Mode',
       options: [
@@ -63,48 +86,21 @@ module.exports = function (self) {
         },
       ],
       callback: async (event) => {
-        self.log('info', 'Display Mode: ' + event.options.num) // Use self.log
+        // Map the numeric value to a descriptive string
+        const modeMap = {
+          0: 'Normal',
+          1: 'Blackout',
+          2: 'Freeze',
+        };
+        const modeName = modeMap[event.options.num] || 'Unknown'; // Get the name or default to 'Unknown'
+
+        self.log('info', 'Display Mode: ' + modeName); // Use the mode name in the log
         try {
           // Use await and try/catch, remove callback function
           const response = await self.novastar.displaymode(event.options.num)
           self.log('debug', 'Display mode change response: ' + JSON.stringify(response)) // Log success if needed
         } catch (error) {
           self.log('error', `Error changing display mode: ${error.message || error}`) // Use self.log for errors
-        }
-      },
-    },
-    gamma: {
-      name: 'Gamma',
-      options: [
-        {
-          id: 'num',
-          type: 'number',
-          label: 'Gamma',
-          default: 2.8,
-          min: 1,
-          max: 4,
-        },
-        {
-          id: 'type',
-          type: 'dropdown',
-          label: 'Type',
-          default: 3,
-          choices: [
-            { id: 3, label: 'All' },
-            { id: 0, label: 'Red' },
-            { id: 1, label: 'Blue' }, // Note: Original comment said Blue=1, Green=2. Verify this mapping.
-            { id: 2, label: 'Green' },
-          ],
-        },
-      ],
-      callback: async (event) => {
-        self.log('info', `Change Gamma: Type=${event.options.type}, Value=${event.options.num}`) // Use self.log
-        try {
-          // Use await and try/catch, remove callback function (assuming gamma takes value, type, optional screenId)
-          const response = await self.novastar.gamma(event.options.num, event.options.type, null)
-          self.log('debug', 'Gamma change response: ' + JSON.stringify(response)) // Log success if needed
-        } catch (error) {
-          self.log('error', `Error changing gamma: ${error.message || error}`) // Use self.log for errors
         }
       },
     },
