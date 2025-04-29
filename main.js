@@ -4,7 +4,8 @@ const UpdateActions = require('./actions')
 const UpdateFeedbacks = require('./feedbacks')
 const UpdateVariableDefinitions = require('./variables')
 
-const Novastar = require('@novastar-dev/coex')
+// const Novastar = require('@novastar-dev/coex')
+const Novastar = require('C:\\Users\\zhang\\Downloads\\projects\\companion-project\\novastar-coex\\index.js')
 const _ = require('lodash')
 
 const novastar = {}
@@ -19,6 +20,7 @@ class ModuleInstance extends InstanceBase {
     this.presets = [] // Store presets
     this.presetlist = [] // Store presets for dropdown
     this.currentPresetName = 'Not Activated' // Store current preset name
+    this.displayState = null // Store current display state
   }
 
   async init(config) {
@@ -29,6 +31,7 @@ class ModuleInstance extends InstanceBase {
     this.sourcelist = [] // Reset sourcelist
     this.presets = [] // Reset presets
     this.presetlist = [] // Reset presetlist
+    this.displayState = null // Reset display state
 
     // Clear any existing timer
     if (this.pollTimer) {
@@ -79,6 +82,13 @@ class ModuleInstance extends InstanceBase {
           this.processPresetsData,
           'Presets'
         );
+        // Initial fetch for display state
+        await this.pollData(
+          this.novastar.getDisplayState.bind(this.novastar),
+          'displayState',
+          this.processDisplayStateData,
+          'Display state'
+        );
 
         // Start the combined polling timer
         this.pollTimer = setInterval(async () => { // Make interval callback async
@@ -94,6 +104,13 @@ class ModuleInstance extends InstanceBase {
             this.processPresetsData,
             'Presets'
           );
+          // Poll for display state
+          await this.pollData(
+            this.novastar.getDisplayState.bind(this.novastar),
+            'displayState',
+            this.processDisplayStateData,
+            'Display state'
+          );
           // Optional: Call checkVariables once here if removed from process callbacks
           // this.checkVariables();
         }, 500); // Poll every 5 seconds (adjust as needed)
@@ -106,6 +123,7 @@ class ModuleInstance extends InstanceBase {
         this.displayParams = [] // Clear display params on failure
         this.presets = [] // Clear presets on failure
         this.presetlist = [] // Clear presetlist on failure
+        this.displayState = null // Clear display state on failure
         this.updateActions() // Still update actions, maybe with empty lists
         this.updateVariableDefinitions() // Update variables to reflect empty state
         this.checkVariables() // Update variable values (likely to empty/default)
@@ -117,6 +135,7 @@ class ModuleInstance extends InstanceBase {
       this.displayParams = []
       this.presets = []
       this.presetlist = []
+      this.displayState = null // Clear display state on bad config
       this.updateActions() // Update actions even with bad config
       this.updateVariableDefinitions() // Update variables to reflect empty state
       this.checkVariables()
@@ -137,7 +156,10 @@ class ModuleInstance extends InstanceBase {
       const currentData = this[stateProperty];
 
       // Ensure newData is always an array for comparison for list-based properties
-      const safeNewData = newData || ((stateProperty === 'presets' || stateProperty === 'displayParams') ? [] : newData);
+      // Adjust for displayState which is an object, not an array
+      const safeNewData = (stateProperty === 'presets' || stateProperty === 'displayParams')
+        ? (newData || [])
+        : newData;
 
       if (!_.isEqual(safeNewData, currentData)) {
         this.log('debug', `${errorMsgPrefix} updated`);
@@ -186,7 +208,14 @@ class ModuleInstance extends InstanceBase {
     }
   }
 
-  // Method to update variable values based on stored displayParams
+  // Specific callback for processing display state data
+  processDisplayStateData(newState) {
+    // this.displayState is already updated by pollData
+    this.checkVariables(); // Update variable values
+    this.checkFeedbacks(); // Update feedbacks if any depend on display state
+  }
+
+  // Method to update variable values based on stored data
   checkVariables() {
     const variableValues = {}
     if (Array.isArray(this.displayParams)) {
@@ -202,6 +231,19 @@ class ModuleInstance extends InstanceBase {
     }
     // Set the current preset name variable
     variableValues['current_preset_name'] = this.currentPresetName || 'Not Activated';
+
+    // Set the display state variable
+    if (this.displayState && this.displayState.displayState && this.displayState.displayState.length > 0) {
+      const currentMode = this.displayState.displayState[0].displayMode;
+      const modeMap = {
+        0: 'Normal',
+        1: 'Blackout',
+        2: 'Freeze',
+      };
+      variableValues['display_state'] = modeMap[currentMode] || 'Unknown';
+    } else {
+      variableValues['display_state'] = 'Unknown'; // Default if state is unavailable
+    }
 
     this.setVariableValues(variableValues)
   }

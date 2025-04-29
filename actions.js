@@ -304,5 +304,78 @@ module.exports = function (self) {
         }
       },
     },
+    toggle_blackout: {
+      name: 'Toggle Blackout/Normal',
+      options: [], // No options needed
+      callback: async (event) => {
+        self.log('info', 'Toggling Blackout/Normal state...')
+        try {
+          // 1. Get the current display state
+          const currentStateData = await self.novastar.getDisplayState()
+          // Assuming the first screen's state is representative
+          const currentMode = currentStateData?.displayState?.[0]?.displayMode
+
+          self.log('debug', `Current display mode number: ${currentMode}`)
+
+          // 2. Decide which action to call
+          let response
+          if (currentMode === 1) { // Currently Blackout
+            self.log('info', 'Currently Blackout, switching to Normal')
+            response = await self.novastar.normal() // Call normal() alias
+          } else if (currentMode === 0) { // Currently Normal
+            self.log('info', 'Currently Normal, switching to Blackout')
+            response = await self.novastar.blackout() // Call blackout() alias
+          } else if (currentMode === 2) { // Currently Freeze
+            self.log('warn', 'Display is currently Frozen. Toggling to Blackout.')
+            response = await self.novastar.blackout() // Or choose to switch to Normal if preferred
+          } else {
+            self.log('warn', `Unknown current display mode (${currentMode}). Attempting to switch to Blackout.`)
+            response = await self.novastar.blackout() // Fallback action
+          }
+          self.log('debug', 'Toggle action response: ' + JSON.stringify(response))
+
+        } catch (error) {
+          self.log('error', `Error toggling blackout state: ${error.message || error}`)
+          console.error(`[${self.id}] Raw error object during toggle_blackout:`, error)
+        }
+      },
+    },
+    // New action to toggle freeze
+    toggle_freeze: {
+      name: 'Toggle Freeze/Normal',
+      options: [], // No options needed
+      callback: async (event) => {
+        self.log('info', 'Toggling Freeze/Normal state...')
+        try {
+          // 1. Get the current display state
+          const currentStateData = await self.novastar.getDisplayState()
+          // Assuming the first screen's state is representative
+          const currentMode = currentStateData?.displayState?.[0]?.displayMode
+
+          self.log('debug', `Current display mode number: ${currentMode}`)
+
+          // 2. Decide which action to call
+          let response
+          if (currentMode === 2) { // Currently Freeze
+            self.log('info', 'Currently Freeze, switching to Normal')
+            response = await self.novastar.normal() // Call normal() alias
+          } else if (currentMode === 0) { // Currently Normal
+            self.log('info', 'Currently Normal, switching to Freeze')
+            response = await self.novastar.freeze() // Call freeze() alias
+          } else if (currentMode === 1) { // Currently Blackout
+            self.log('warn', 'Display is currently Blackout. Toggling to Freeze.')
+            response = await self.novastar.freeze() // Or choose to switch to Normal if preferred
+          } else {
+            self.log('warn', `Unknown current display mode (${currentMode}). Attempting to switch to Freeze.`)
+            response = await self.novastar.freeze() // Fallback action
+          }
+          self.log('debug', 'Toggle action response: ' + JSON.stringify(response))
+
+        } catch (error) {
+          self.log('error', `Error toggling freeze state: ${error.message || error}`)
+          console.error(`[${self.id}] Raw error object during toggle_freeze:`, error)
+        }
+      },
+    },
   })
 }

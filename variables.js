@@ -35,6 +35,11 @@ module.exports = async function (self) {
       variableId: 'current_preset_name',
       name: 'Current Preset Name',
     })
+    // Add variable for Display State
+    variableDefinitions.push({
+      variableId: 'display_state',
+      name: 'Current Display State',
+    })
 
   } else {
     // Optionally add placeholder variables or a status variable if no params are available
