@@ -4,8 +4,7 @@ const UpdateActions = require('./actions')
 const UpdateFeedbacks = require('./feedbacks')
 const UpdateVariableDefinitions = require('./variables')
 
-// const Novastar = require('@novastar-dev/coex')
-const Novastar = require('C:\\Users\\zhang\\Downloads\\projects\\companion-project\\novastar-coex\\index.js')
+const Novastar = require('@novastar-dev/coex')
 const _ = require('lodash')
 
 const novastar = {}
@@ -113,7 +112,7 @@ class ModuleInstance extends InstanceBase {
           );
           // Optional: Call checkVariables once here if removed from process callbacks
           // this.checkVariables();
-        }, 500); // Poll every 5 seconds (adjust as needed)
+        }, 500); // Poll every 0.5 seconds (adjust as needed)
 
       } catch (error) {
         this.log('error', `Connection or initial data fetch failed: ${error.message || JSON.stringify(error)}`) // Log the error
