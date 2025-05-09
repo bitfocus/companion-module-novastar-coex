@@ -1,8 +1,53 @@
 module.exports = async function (self) {
-	self.setVariableDefinitions([
-		//maybe we put model name here?
-		// { variableId: 'variable1', name: 'My first variable' },
-		// { variableId: 'variable2', name: 'My second variable' },
-		// { variableId: 'variable3', name: 'Another variable' },
-	])
+  const variableDefinitions = []
+
+  // Check if displayParams exists and is an array
+  if (Array.isArray(self.displayParams)) {
+    self.displayParams.forEach((param, index) => {
+      const screenLabel = `Screen ${index + 1}` // Use index for label as ID might be long/complex
+
+      // Add variable for Screen ID (optional, but potentially useful)
+      variableDefinitions.push({
+        variableId: `screen_${index}_id`,
+        name: `${screenLabel} ID`,
+      })
+
+      // Add variable for Brightness
+      variableDefinitions.push({
+        variableId: `screen_${index}_brightness`,
+        name: `${screenLabel} Brightness`,
+      })
+
+      // Add variable for Color Temperature
+      variableDefinitions.push({
+        variableId: `screen_${index}_colortemp`,
+        name: `${screenLabel} Color Temperature`,
+      })
+
+      // Add variable for Gamma
+      variableDefinitions.push({
+        variableId: `screen_${index}_gamma`,
+        name: `${screenLabel} Gamma`,
+      })
+    })
+    // Add variable for Current Preset Name
+    variableDefinitions.push({
+      variableId: 'current_preset_name',
+      name: 'Current Preset Name',
+    })
+    // Add variable for Display State
+    variableDefinitions.push({
+      variableId: 'display_state',
+      name: 'Current Display State',
+    })
+
+  } else {
+    // Optionally add placeholder variables or a status variable if no params are available
+    variableDefinitions.push({
+      variableId: 'connection_status',
+      name: 'Device Status',
+    })
+  }
+
+  self.setVariableDefinitions(variableDefinitions)
 }
