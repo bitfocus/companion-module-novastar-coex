@@ -18,6 +18,7 @@ class ModuleInstance extends InstanceBase {
     this.displayParams = [] // Store display parameters
     this.presets = [] // Store presets
     this.presetlist = [] // Store presets for dropdown
+    this.screenlist = [] // Store screens for dropdowns
     this.currentPresetName = 'Not Activated' // Store current preset name
     this.displayState = null // Store current display state
     this.initialDataFetched = false // Add a flag to track if initial data fetch is complete
@@ -31,6 +32,7 @@ class ModuleInstance extends InstanceBase {
     this.sourcelist = [] // Reset sourcelist
     this.presets = [] // Reset presets
     this.presetlist = [] // Reset presetlist
+    this.screenlist = [] // Reset screenlist
     this.displayState = null // Reset display state
     this.initialDataFetched = false // Reset flag
 
@@ -67,6 +69,7 @@ class ModuleInstance extends InstanceBase {
       this.displayParams = []
       this.presets = []
       this.presetlist = []
+      this.screenlist = []
       this.displayState = null
       this.updateActions() // Reflect empty lists in actions
       this.updateVariableDefinitions()
@@ -88,13 +91,10 @@ class ModuleInstance extends InstanceBase {
 
       // Fetch presets
       const presetsResponse = await this.novastar.getPreset()
-      this.presets = presetsResponse || [] // Ensure it's an array
+      this.presets = this.normalizePresetsData(presetsResponse)
       this.log('info', 'Fetched presets')
 
-      this.presetlist = _.map(this.presets, function (preset) {
-        // Use preset name for both id and label for simplicity in action callback
-        return { id: preset.name, label: preset.name }
-      })
+      this.presetlist = this.buildPresetList(this.presets)
 
       // Find the active preset
       const activePreset = this.presets.find((p) => p.state === true)
@@ -166,6 +166,7 @@ class ModuleInstance extends InstanceBase {
       this.displayParams = [] // Clear display params on failure
       this.presets = [] // Clear presets on failure
       this.presetlist = [] // Clear presetlist on failure
+      this.screenlist = [] // Clear screenlist on failure
       this.displayState = null // Clear display state on failure
       this.updateActions() // Still update actions, maybe with empty lists
       this.updateVariableDefinitions() // Update variables to reflect empty state
@@ -184,12 +185,12 @@ class ModuleInstance extends InstanceBase {
       const newData = await apiMethod()
       const currentData = this[stateProperty]
 
-      // Ensure newData is always an array for comparison for list-based properties
-      // Adjust for displayState which is an object, not an array
-      const safeNewData =
-        stateProperty === 'presets' || stateProperty === 'displayParams'
-          ? newData || []
-          : newData
+      let safeNewData = newData
+      if (stateProperty === 'presets') {
+        safeNewData = this.normalizePresetsData(newData)
+      } else if (stateProperty === 'displayParams') {
+        safeNewData = newData || []
+      }
 
       if (!_.isEqual(safeNewData, currentData)) {
         this.log('debug', `${errorMsgPrefix} updated`)
@@ -205,9 +206,59 @@ class ModuleInstance extends InstanceBase {
     }
   }
 
+  normalizePresetsData(rawPresets) {
+    if (Array.isArray(rawPresets)) {
+      return rawPresets
+    }
+
+    const screenPresetList = rawPresets?.screenPresetList || rawPresets?.data?.screenPresetList
+    if (Array.isArray(screenPresetList) && screenPresetList.length > 0) {
+      const firstScreenPresets = screenPresetList[0]?.presetList
+      if (Array.isArray(firstScreenPresets)) {
+        return firstScreenPresets
+      }
+    }
+
+    return []
+  }
+
+  buildPresetList(presets) {
+    return _.map(presets, function (preset) {
+      const sequenceNumber = preset.sequenceNumber
+      const name = preset.name
+        ? preset.name
+        : sequenceNumber !== undefined
+          ? `Preset ${sequenceNumber}`
+          : 'Preset'
+      const label =
+        sequenceNumber !== undefined && sequenceNumber !== null ? `${name} (${sequenceNumber})` : name
+      const id = sequenceNumber !== undefined && sequenceNumber !== null ? sequenceNumber : name
+      return { id, label }
+    })
+  }
+
+  updateScreenListFromDisplayParams(newParams) {
+    const newList = Array.isArray(newParams)
+      ? newParams
+          .map((param, index) => ({
+            id: param?.screenId,
+            label: param?.screenId ? `Screen ${index + 1} (${param.screenId})` : `Screen ${index + 1}`,
+          }))
+          .filter((screen) => screen.id)
+      : []
+
+    if (!_.isEqual(newList, this.screenlist)) {
+      this.screenlist = newList
+      if (this.initialDataFetched) {
+        this.updateActions()
+      }
+    }
+  }
+
   // Specific callback for processing display parameters data
   processDisplayParamsData(newParams) {
     // this.displayParams is already updated by pollData
+    this.updateScreenListFromDisplayParams(newParams)
     this.updateVariableDefinitions() // Re-define variables if screen count changes
     this.checkVariables() // Update the variable values
     this.checkFeedbacks() // Add this line to trigger feedback updates
@@ -217,9 +268,7 @@ class ModuleInstance extends InstanceBase {
   processPresetsData(newPresets) {
     // this.presets is already updated by pollData
     // Update preset list for dropdowns
-    this.presetlist = _.map(newPresets, function (preset) {
-      return { id: preset.name, label: preset.name }
-    })
+    this.presetlist = this.buildPresetList(newPresets)
     // Update actions only if initial data has been fetched, to avoid errors if presetlist is used before populated
     if (this.initialDataFetched) {
       this.updateActions()

@@ -35,12 +35,21 @@ module.exports = function (self) {
           min: 0,
           max: 100,
         },
+        {
+          id: 'screenId',
+          type: 'dropdown',
+          label: 'Screen',
+          default: 'all',
+          choices: [{ id: 'all', label: 'All screens' }].concat(self.screenlist || []),
+        },
       ],
       callback: async (event) => {
-        self.log('info', 'Change Brightness: ' + event.options.num) // Use self.log
+        const screenId = event.options.screenId === 'all' ? null : event.options.screenId
+        const screenLabel = screenId || 'all'
+        self.log('info', `Change Brightness: ${event.options.num} (Screen: ${screenLabel})`) // Use self.log
         try {
           // Use await and try/catch, remove callback function (assuming brightness takes value and optional screenId)
-          const response = await self.novastar.brightness(event.options.num, null)
+          const response = await self.novastar.brightness(event.options.num, screenId)
           self.log('debug', 'Brightness change response: ' + JSON.stringify(response)) // Log success if needed
         } catch (error) {
           self.log('error', `Error changing brightness: ${error.message || error}`) // Use self.log for errors
@@ -57,13 +66,22 @@ module.exports = function (self) {
           default: 2.8,
           min: 1,
           max: 4,
-        }
+        },
+        {
+          id: 'screenId',
+          type: 'dropdown',
+          label: 'Screen',
+          default: 'all',
+          choices: [{ id: 'all', label: 'All screens' }].concat(self.screenlist || []),
+        },
       ],
       callback: async (event) => {
-        self.log('info', `Change Gamma: Value=${event.options.num}`) // Use self.log
+        const screenId = event.options.screenId === 'all' ? null : event.options.screenId
+        const screenLabel = screenId || 'all'
+        self.log('info', `Change Gamma: Value=${event.options.num} (Screen: ${screenLabel})`) // Use self.log
         try {
           // Use await and try/catch, remove callback function (assuming gamma takes value, type, optional screenId)
-          const response = await self.novastar.gamma(event.options.num, null)
+          const response = await self.novastar.gamma(event.options.num, screenId)
           self.log('debug', 'Gamma change response: ' + JSON.stringify(response)) // Log success if needed
         } catch (error) {
           self.log('error', `Error changing gamma: ${error.message || error}`) // Use self.log for errors
@@ -115,12 +133,21 @@ module.exports = function (self) {
           min: 1700,
           max: 15000,
         },
+        {
+          id: 'screenId',
+          type: 'dropdown',
+          label: 'Screen',
+          default: 'all',
+          choices: [{ id: 'all', label: 'All screens' }].concat(self.screenlist || []),
+        },
       ],
       callback: async (event) => {
-        self.log('info', 'Change Color Temp: ' + event.options.num) // Use self.log
+        const screenId = event.options.screenId === 'all' ? null : event.options.screenId
+        const screenLabel = screenId || 'all'
+        self.log('info', `Change Color Temp: ${event.options.num} (Screen: ${screenLabel})`) // Use self.log
         try {
           // Use await and try/catch, remove callback function (assuming colortemperature takes value, optional screenId)
-          const response = await self.novastar.colortemperature(event.options.num, null)
+          const response = await self.novastar.colortemperature(event.options.num, screenId)
           self.log('debug', 'Color temp change response: ' + JSON.stringify(response)) // Log success if needed
         } catch (error) {
           self.log('error', `Error changing color temperature: ${error.message || error}`) // Use self.log for errors
@@ -137,13 +164,22 @@ module.exports = function (self) {
           default: _.get(self, 'presetlist[0].id'), // Default to the first preset name
           choices: self.presetlist, // Use the dynamic list from main.js
         },
+        {
+          id: 'screenId',
+          type: 'dropdown',
+          label: 'Screen',
+          default: _.get(self, 'screenlist[0].id', 'auto'),
+          choices: [{ id: 'auto', label: 'Auto (first screen)' }].concat(self.screenlist || []),
+        },
       ],
       callback: async (event) => {
-        self.log('info', 'Change Preset: ' + event.options.preset) // Use self.log
+        const screenId = event.options.screenId === 'auto' ? null : event.options.screenId
+        const screenLabel = screenId || 'auto'
+        self.log('info', `Change Preset: ${event.options.preset} (Screen: ${screenLabel})`) // Use self.log
         try {
           // Use await and try/catch, remove callback function (assuming applyPreset takes name or ID)
-          const response = await self.novastar.applyPreset(event.options.preset, null)
-          self.log('info', `Successfully applied preset: ${event.options.preset}`)
+          const response = await self.novastar.applyPreset(event.options.preset, screenId)
+          self.log('info', `Successfully applied preset: ${event.options.preset} (Screen: ${screenLabel})`)
           self.log('debug', 'Apply preset response: ' + JSON.stringify(response))
           // Optional: Force a poll after applying preset to update state immediately
           // await self.pollData(...) for presets
