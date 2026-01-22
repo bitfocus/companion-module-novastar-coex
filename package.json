@@ -13,7 +13,7 @@
 	"dependencies": {
 		"@companion-module/base": "^1.11.3",
 		"@novastar-dev/coex": "^2.0.1",
-		"lodash": "^4.17.21"
+		"lodash": "^4.17.23"
 	},
 	"devDependencies": {
 		"@companion-module/tools": "^2.3.0"
