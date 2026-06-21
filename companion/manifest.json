@@ -14,10 +14,10 @@
 		}
 	],
 	"runtime": {
-		"type": "node18",
+		"type": "node22",
 		"api": "nodejs-ipc",
 		"apiVersion": "0.0.0",
-		"entrypoint": "../main.js"
+		"entrypoint": "../dist/main.js"
 	},
 	"legacyIds": [
 		"companion-module-novastar-coex"
